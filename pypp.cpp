@@ -17,26 +17,35 @@ void printString(const std::string& s)
     std::cout << "}" << std::endl;
 }
 
-// Trim whitespaces from start of string
-inline std::string ltrim(std::string s)
-{
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) { return !std::isspace(ch); }));
-    return s;
-}
-
-// Trim whitespaces from end of string
-inline std::string rtrim(std::string s)
-{
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(),
-        s.end());
-    return s;
-}
-
-inline std::string trim(std::string s) { return ltrim(rtrim(s)); }
-
 } // namespace
 
 namespace pypp {
+
+std::string lstripDigit(std::string s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isdigit(c); }));
+    return s;
+}
+
+std::string rstripDigit(std::string s)
+{
+    s.erase(
+        std::find_if(s.rbegin(), s.rend(), [](unsigned char c) { return !std::isdigit(c); }).base(), s.end());
+    return s;
+}
+
+std::string lstripAlpha(std::string s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isalpha(c); }));
+    return s;
+}
+
+std::string rstripAlpha(std::string s)
+{
+    s.erase(
+        std::find_if(s.rbegin(), s.rend(), [](unsigned char c) { return !std::isalpha(c); }).base(), s.end());
+    return s;
+}
 
 strings split(const std::string& input_s, char ch, int at_most)
 {
@@ -47,10 +56,11 @@ strings split(const std::string& input_s, char ch, int at_most)
 
     std::string t_input_s = input_s;
     std::string::size_type pos { 0 };
+    auto is_space = [](unsigned char c) { return std::isspace(c); };
 
     do {
         pos = t_input_s.find(ch);
-        s.push_back(trim(t_input_s.substr(0, pos)));
+        s.push_back(strip(t_input_s.substr(0, pos), is_space));
         t_input_s.erase(0, pos + 1);
     } while (pos != std::string::npos);
 
