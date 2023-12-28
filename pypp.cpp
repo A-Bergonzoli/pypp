@@ -70,4 +70,26 @@ strings split(const std::string& input_s, char ch, int at_most)
     return s;
 }
 
+strings splitLines(const std::string& s) { return split(s, '\n'); }
+
+strings splitFileLines(const std::string& from_location)
+{
+    std::fstream in_f(from_location, std::ios::in);
+    std::string line_read {};
+    strings lines {};
+
+    if (in_f.is_open()) {
+        for (; std::getline(in_f, line_read);)
+            if (!line_read.empty())
+                lines.emplace_back(line_read);
+    } else {
+        std::cerr << "Error: could not open file." << std::endl;
+    }
+
+    if (lines.empty())
+        lines.emplace_back("");
+
+    return lines;
+}
+
 } // namespace pypp

@@ -1,5 +1,6 @@
 #include "../pypp.h"
 #include "gtest/gtest.h"
+#include <filesystem>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -138,10 +139,8 @@ struct SplitRecord {
     int at_most = -1;
 };
 
-class SplitFixture : public testing::TestWithParam<SplitRecord> {
-public:
-protected:
-};
+/// @brief Fixture class to facilitate parameterized tests of split
+class SplitFixture : public testing::TestWithParam<SplitRecord> { };
 
 TEST_P(SplitFixture, GivenString_WhenSplittingOnSomechar_ExpectCorrectResult)
 {
@@ -166,6 +165,40 @@ const std::vector<SplitRecord> split_records
           { { "" }, ',', {} }, { { "foo;ba, r,  ,dead, c;ode$be; ef" }, ',', { { "foo;ba" }, { "r" } }, 2 } };
 
 INSTANTIATE_TEST_SUITE_P(SplitTests, SplitFixture, testing::ValuesIn(split_records));
+
+struct SplitFileLinesRecord {
+    std::string filepath;
+    strings expected;
+};
+
+/// @brief Fixture class to facilitate parameterized tests of splitFileLines
+class SplitFileLinesFixture : public testing::TestWithParam<SplitFileLinesRecord> { };
+
+TEST_P(SplitFileLinesFixture, Sometest)
+{
+    // Given
+    strings expected = GetParam().expected;
+
+    // When
+    const auto result = pypp::splitFileLines(GetParam().filepath);
+
+    // Then
+    ASSERT_EQ(result, expected);
+}
+
+namespace fs = std::filesystem;
+const std::string cpath = fs::current_path().u8string();
+
+const std::vector<SplitFileLinesRecord> split_file_lines_records
+    = { { { cpath + "/../test/for_files/input.txt" }, { { "123456789" } } },
+          { { cpath + "/../test/for_files/input_multiline.txt" },
+              { { "111" }, { "222" }, { "333" }, { "444" }, { "555" } } },
+          { { cpath + "/../test/for_files/empty.txt" }, { { "" } } },
+          { { cpath + "/../test/for_files/empty_multiline.txt" }, { { "" } } },
+          { { cpath + "/../test/for_files/half_empty.txt" }, { { "111" }, { "222" }, { "444" } } } };
+
+INSTANTIATE_TEST_CASE_P(
+    SplitFilesLinesTess, SplitFileLinesFixture, testing::ValuesIn(split_file_lines_records));
 
 int main(int argc, char** argv)
 {

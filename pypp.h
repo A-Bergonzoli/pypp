@@ -77,9 +77,18 @@ template <typename UnaryPredicate> std::string strip(std::string s, UnaryPredica
 /// @return a vector of substrings obtained by splitting @input_s every @split_on
 strings split(const std::string& input_s, char split_on, int at_most = -1);
 
-strings splitlines(const std::string&);
+///@brief Split a string into lines and store them as a vector
+///
+/// @param s string to split
+/// @return a vector of substrings obtained by splitting @s on newline characters
+strings splitLines(const std::string& s);
 
-strings splitlines(const std::fstream&);
+///@brief Split the contents of a file into lines and store them as a vector
+///
+/// @param from_location file path
+/// @return a vector of strings containing the lines of the file
+/// @note empty lines are discarded
+strings splitFileLines(const std::string& from_location);
 
 } // namespace pypp
 
