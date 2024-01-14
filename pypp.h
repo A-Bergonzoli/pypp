@@ -92,4 +92,36 @@ strings splitFileLines(const std::string& from_location);
 
 } // namespace pypp
 
+
+namespace pypp {
+
+/// @brief Default case, when all other arguments have been dealt with.
+///        Advances the last iterator.
+template <class Iterator> void advanceIterators(Iterator&& iterator)
+{
+    std::advance(iterator, 1);
+}
+
+/// @brief Advances the first iterator and forwards the rest of the variadic arguments
+template <class Iterator, class... Iterators>
+void advanceIterators(Iterator&& iterator, Iterators&&... iterators)
+{
+    std::advance(iterator, 1);
+    advanceIterators(std::forward<Iterators>(iterators)...);
+}
+
+/// @brief Return an iterable of tuples, where the i-th tuple contains the i-th element
+///        from each of the argument iterables.
+///        It turns rows into columns, and colums into rows (similar to transposing a matrix)
+template <class Iterator, class... Iterators> auto zip(Iterator begin, Iterator end, Iterators... iterators)
+{
+    std::vector<std::tuple<typename Iterator::value_type, typename Iterators::value_type...>> result {};
+    for (; begin != end; ++begin, advanceIterators(iterators...))
+        result.push_back(std::make_tuple(*begin, *iterators...));
+
+    return result;
+}
+
+} // namespace pypp
+
 #endif // PYPP_H
