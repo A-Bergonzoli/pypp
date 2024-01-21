@@ -3,7 +3,9 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using strings = std::vector<std::string>;
@@ -92,6 +94,201 @@ strings splitFileLines(const std::string& from_location);
 
 } // namespace pypp
 
+namespace collections {
+
+/// @brief A collection of key-value pairs, where:
+///        - elements [Generic] are stored as <Keys>
+///        - element counts [int] are stored as <Values>
+template <class Key, class Hash = std::hash<Key>> class Counter {
+public:
+    using vecKeyIt = typename std::vector<Key>::iterator;
+    using vecValueIt = typename std::vector<int>::iterator;
+    using vecKeyValueIt = typename std::vector<std::pair<Key, int>>::iterator;
+
+    Counter() = default;
+
+    template <class InputIt> Counter(InputIt first, InputIt last)
+    {
+        for (; first != last; ++first) {
+            umap_[*first] += 1;
+        }
+
+        keys_.reserve(umap_.size());
+        counts_.reserve(umap_.size());
+        items_.reserve(umap_.size());
+    }
+
+    Counter(const Counter& other) = delete;
+
+    Counter& operator=(const Counter& other) = delete;
+
+    Counter(Counter&& other) = delete;
+
+    Counter& operator=(Counter&& other) = delete;
+
+    /// @brief (Psuedo-) copy-constructor
+    ///        Implicit conversion from std::unordered_map<Key, int> -> Counter is allowed
+    template <class T> Counter(const std::unordered_map<T, int>& other_map)
+    {
+        static_assert(std::is_same_v<Key, T> == true,
+            "Assignment Error: Can not construct Counter from incompatible Key type: {}");
+
+        this->umap_ = other_map;
+    }
+
+    /// @brief (Psuedo-) copy-assignment
+    ///        Implicit conversion from std::unordered_map<Key, int> -> Counter is allowed
+    template <class T> Counter& operator=(const std::unordered_map<T, int>& other_map)
+    {
+        static_assert(std::is_same_v<Key, T> == true,
+            "Assignment Error: Can not assing to Counter from incompatible Key type: {}");
+        // @note, possible TODO : cannot check for equality to existing map;
+        // would need to overload operator==
+
+        this->umap_ = other_map;
+        return *this;
+    }
+
+    /// @brief Retrieve underlying map
+    std::unordered_map<Key, int, Hash> getUnderlyingMap() const
+    {
+        return umap_;
+    }
+
+    /// @brief Wrapper of std::unordered_map<>::size()
+    std::size_t size()
+    {
+        return umap_.size();
+    }
+
+    /// @brief Wrapper of std::unordered_map<>::empty()
+    bool empty()
+    {
+        return umap_.empty();
+    }
+
+    /// @brief Wrapper of std::unordered_map<>::operator[]
+    ///
+    /// @note Return value is reference to int (int&) to allow to modify it
+    /// @note Complexity:
+    ///       - avg: constant
+    ///       - woc: linear in size
+    ///
+    /// @param key
+    int& operator[](const Key& key)
+    {
+        return umap_[key];
+    }
+    int& operator[](Key&& key)
+    {
+        return umap_[key];
+    }
+
+    /// @brief Return a pair of begin and end iterators to the keys
+    ///
+    /// @return A pair of iterators to a std::vector<Key>
+    std::pair<vecKeyIt, vecKeyIt> keys()
+    {
+        keys_.clear();
+        for (const auto& pair : umap_)
+            keys_.push_back(pair.first);
+
+        return std::make_pair<vecKeyIt, vecKeyIt>(keys_.begin(), keys_.end());
+    }
+
+    /// @brief Return a pair of begin and end iterarors to the counts
+    ///
+    /// @return A pair of iterators to a std::vector<int>
+    std::pair<vecValueIt, vecValueIt> values()
+    {
+        counts_.clear();
+        for (const auto& pair : umap_)
+            counts_.push_back(pair.second);
+
+        return std::make_pair<vecValueIt, vecValueIt>(counts_.begin(), counts_.end());
+    }
+
+    /// @brief Return a pair of begin and end iterators to the keys and counts
+    ///
+    /// @return A pair of iterators to a std::vector<std::pair<Key, int>>
+    std::pair<vecKeyValueIt, vecKeyValueIt> items()
+    {
+        items_.clear();
+        for (const auto& pair : umap_)
+            items_.push_back(pair);
+
+        return std::make_pair<vecKeyValueIt, vecKeyValueIt>(items_.begin(), items_.end());
+    }
+
+    /// @brief Return an iterator over elements, repeating each as many time as its count.
+    /// @note If an element's count is < 1 it is ignored
+    ///
+    /// @return A pair of iterators to a std::vector<Key>
+    std::pair<vecKeyIt, vecKeyIt> elements()
+    {
+        auto vec_pair_key_int = this->mostCommon();
+
+        elems_.clear();
+        for (const auto& pair : vec_pair_key_int) {
+            int count = pair.second;
+            while (count-- > 0)
+                elems_.push_back(pair.first);
+        }
+
+        return std::make_pair<vecKeyIt, vecKeyIt>(elems_.begin(), elems_.end());
+    }
+
+    /// @brief Return the `n` most common elements and their counts sorted by most to least common.
+    ///
+    /// @param n Max number of elements returned
+    /// @return A std::vector of std::pair<Key, int> representing the elements and their corresponding counts
+    /// @note By default returns all elements in the Counter
+    std::vector<std::pair<Key, int>> mostCommon(int8_t n = 0) const
+    {
+        std::vector<std::pair<Key, int>> t_v {};
+        t_v.reserve(umap_.size());
+
+        for (const auto& pair : umap_)
+            t_v.push_back(pair);
+
+        std::sort(std::begin(t_v), std::end(t_v),
+            [](const std::pair<Key, int> p1, const std::pair<Key, int> p2) { return p1.second > p2.second; });
+
+        const auto endIt = (n > 0 && n < umap_.size()) ? std::begin(t_v) + n : std::end(t_v);
+        return std::vector<std::pair<Key, int>>(std::begin(t_v), endIt);
+    }
+
+    /// @brief Return the sum of all counts.
+    ///
+    /// @return The sum of all counts
+    int total() const
+    {
+        if (umap_.empty())
+            return 0;
+
+        int sum { 0 };
+        for (const auto& pair : umap_)
+            sum += pair.second;
+
+        return sum;
+    }
+
+private:
+    std::unordered_map<Key, int, Hash> umap_ {};
+    std::vector<Key> elems_ {};
+    std::vector<Key> keys_ {};
+    std::vector<int> counts_ {};
+    std::vector<std::pair<Key, int>> items_ {};
+};
+
+struct TupleHash {
+    template <class T1, class T2> auto operator()(const std::tuple<T1, T2>& t) const noexcept -> std::size_t
+    {
+        return std::hash<T1> {}(std::get<0>(t)) ^ std::hash<T2> {}(std::get<1>(t));
+    }
+};
+
+} // namespace collections
 
 namespace pypp {
 
