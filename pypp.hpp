@@ -2,10 +2,12 @@
 #define _PYPP_H
 
 #include <algorithm>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 using strings = std::vector<std::string>;
@@ -16,25 +18,43 @@ namespace pypp {
 ///
 /// @param s a string
 /// @return a copy of @s with leading digits removed
-std::string lstripDigit(std::string s);
+std::string lstripDigit(std::string s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isdigit(c); }));
+    return s;
+}
 
 /// @brief Return a copy of the string with trailing digit characters removed
 ///
 /// @param s a string
 /// @return a copy of @s with trailing digits removed
-std::string rstripDigit(std::string s);
+std::string rstripDigit(std::string s)
+{
+    s.erase(
+        std::find_if(s.rbegin(), s.rend(), [](unsigned char c) { return !std::isdigit(c); }).base(), s.end());
+    return s;
+}
 
 /// @brief Return a copy of the string with leading alphabetical characters removed
 ///
 /// @param s a string
 /// @return a copy of @s with leading alphas removed
-std::string lstripAlpha(std::string s);
+std::string lstripAlpha(std::string s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isalpha(c); }));
+    return s;
+}
 
 /// @brief Return a copy of the string with trailing alphabetical characters removed
 ///
 /// @param s a string
 /// @return a copy of @s with trailing alphas removed
-std::string rstripAlpha(std::string s);
+std::string rstripAlpha(std::string s)
+{
+    s.erase(
+        std::find_if(s.rbegin(), s.rend(), [](unsigned char c) { return !std::isalpha(c); }).base(), s.end());
+    return s;
+}
 
 /// @brief Return a copy of the string with leading characters removed
 ///        if predicate holds true
@@ -77,20 +97,62 @@ template <typename UnaryPredicate> std::string strip(std::string s, UnaryPredica
 /// @param  split_on charcater by which to split the string
 /// @param  at_most number of (sub)strings generated
 /// @return a vector of substrings obtained by splitting @input_s every @split_on
-strings split(const std::string& input_s, char split_on, int at_most = -1);
+strings split(const std::string& input_s, char split_on, int at_most = -1)
+{
+    strings s {};
+
+    if (input_s.empty())
+        return s;
+
+    std::string t_input_s = input_s;
+    std::string::size_type pos { 0 };
+    auto is_space = [](unsigned char c) { return std::isspace(c); };
+
+    do {
+        pos = t_input_s.find(split_on);
+        s.push_back(strip(t_input_s.substr(0, pos), is_space));
+        t_input_s.erase(0, pos + 1);
+    } while (pos != std::string::npos);
+
+    if (at_most > 0 and at_most < s.size())
+        s.erase(s.begin() + at_most, s.end());
+
+    return s;
+}
 
 ///@brief Split a string into lines and store them as a vector
 ///
 /// @param s string to split
 /// @return a vector of substrings obtained by splitting @s on newline characters
-strings splitLines(const std::string& s);
+strings splitLines(const std::string& s)
+{
+    return split(s, '\n');
+}
 
 ///@brief Split the contents of a file into lines and store them as a vector
 ///
 /// @param from_location file path
 /// @return a vector of strings containing the lines of the file
 /// @note empty lines are discarded
-strings splitFileLines(const std::string& from_location);
+strings splitFileLines(const std::string& from_location)
+{
+    std::fstream in_f(from_location, std::ios::in);
+    std::string line_read {};
+    strings lines {};
+
+    if (in_f.is_open()) {
+        for (; std::getline(in_f, line_read);)
+            if (!line_read.empty())
+                lines.emplace_back(line_read);
+    } else {
+        std::cerr << "Error: could not open file." << std::endl;
+    }
+
+    if (lines.empty())
+        lines.emplace_back("");
+
+    return lines;
+}
 
 } // namespace pypp
 
@@ -271,6 +333,15 @@ public:
             sum += pair.second;
 
         return sum;
+    }
+
+    // for debugging purposes
+    void pprint()
+    {
+        std::cout << "-----" << std::endl;
+        for (const auto elem : umap_)
+            std::cout << elem.first << ": " << elem.second << std::endl;
+        std::cout << "-----" << std::endl;
     }
 
 private:
