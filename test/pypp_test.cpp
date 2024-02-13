@@ -1,4 +1,4 @@
-#include "../pypp.h"
+#include "../pypp.hpp"
 #include "gtest/gtest.h"
 #include <filesystem>
 #include <gmock/gmock.h>
@@ -156,13 +156,14 @@ TEST_P(SplitFixture, GivenString_WhenSplittingOnSomechar_ExpectCorrectResult)
 
 const std::vector<SplitRecord> split_records
     = { { { "foo;ba, r,  ,dead, c;ode$be; ef" }, ',',
-            { { "foo;ba" }, { "r" }, { "" }, { "dead" }, { "c;ode$be; ef" } } },
+            { { "foo;ba" }, { " r" }, { "  " }, { "dead" }, { " c;ode$be; ef" } } },
           { { "foo;ba, r,  ,dead, c;ode$be; ef" }, ';',
-              { { "foo" }, { "ba, r,  ,dead, c" }, { "ode$be" }, { "ef" } } },
+              { { "foo" }, { "ba, r,  ,dead, c" }, { "ode$be" }, { " ef" } } },
           { { "foo;ba, r,  ,dead, c;ode$be; ef" }, '$', { { "foo;ba, r,  ,dead, c;ode" }, { "be; ef" } } },
           { { "foo;ba, r,  ,dead, c;ode$be; ef" }, '$', { { "foo;ba, r,  ,dead, c;ode" }, { "be; ef" } }, 5 },
           { { "foo;ba, r,  ,dead, c;ode$be; ef" }, '@', { { "foo;ba, r,  ,dead, c;ode$be; ef" } } },
-          { { "" }, ',', {} }, { { "foo;ba, r,  ,dead, c;ode$be; ef" }, ',', { { "foo;ba" }, { "r" } }, 2 } };
+          { { "" }, ',', {} }, { { "foo;ba, r,  ,dead, c;ode$be; ef" }, ',', { { "foo;ba" }, { " r" } }, 2 },
+          { { "ab cd ef gh  i" }, ' ', { { "ab" }, { "cd" }, { "ef" }, { "gh" }, { "i" } } } };
 
 INSTANTIATE_TEST_SUITE_P(SplitTests, SplitFixture, testing::ValuesIn(split_records));
 
