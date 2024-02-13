@@ -110,7 +110,8 @@ strings split(const std::string& input_s, char split_on, int at_most = -1)
 
     do {
         pos = t_input_s.find(split_on);
-        s.push_back(strip(t_input_s.substr(0, pos), is_space));
+        if (pos != 0)
+            s.push_back(t_input_s.substr(0, pos));
         t_input_s.erase(0, pos + 1);
     } while (pos != std::string::npos);
 
