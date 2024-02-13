@@ -15,8 +15,9 @@ if (NOT gtest_POPULATED)
 endif()
 
 # lib to test
-add_library(Pypp STATIC pypp.cpp)
+add_library(Pypp INTERFACE)
+target_include_directories(Pypp INTERFACE pypp.hpp)
 
 # executables
 add_executable(pypp_test test/pypp_test.cpp)
-target_link_libraries(pypp_test Pypp gtest_main gmock_main)
+target_link_libraries(pypp_test PRIVATE Pypp gtest_main gmock_main)
