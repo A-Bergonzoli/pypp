@@ -100,26 +100,29 @@ template <typename UnaryPredicate> std::string strip(std::string s, UnaryPredica
 /// @return a vector of substrings obtained by splitting @input_s every @split_on
 strings split(const std::string& input_s, char split_on, int at_most = -1)
 {
-    strings s {};
+    strings result {};
+    std::string buffer {};
+    buffer.reserve(input_s.size());
 
     if (input_s.empty())
-        return s;
+        return result;
 
-    std::string t_input_s = input_s;
-    std::string::size_type pos { 0 };
-    auto is_space = [](unsigned char c) { return std::isspace(c); };
+    for (const char ch : input_s) {
+        if (ch != split_on)
+            buffer.push_back(ch);
+        else if (!buffer.empty()) {
+            result.push_back(buffer);
+            buffer.clear();
+        }
+    }
 
-    do {
-        pos = t_input_s.find(split_on);
-        if (pos != 0)
-            s.push_back(t_input_s.substr(0, pos));
-        t_input_s.erase(0, pos + 1);
-    } while (pos != std::string::npos);
+    if (!buffer.empty())
+        result.push_back(buffer);
 
-    if (at_most > 0 and at_most < s.size())
-        s.erase(s.begin() + at_most, s.end());
+    if (at_most > 0 and at_most < result.size())
+        result.erase(result.begin() + at_most, result.end());
 
-    return s;
+    return result;
 }
 
 ///@brief Split a string into lines and store them as a vector
