@@ -163,7 +163,7 @@ const std::vector<SplitRecord> split_records
           { { "foo;ba, r,  ,dead, c;ode$be; ef" }, '$', { { "foo;ba, r,  ,dead, c;ode" }, { "be; ef" } }, 5 },
           { { "foo;ba, r,  ,dead, c;ode$be; ef" }, '@', { { "foo;ba, r,  ,dead, c;ode$be; ef" } } },
           { { "" }, ',', {} }, { { "foo;ba, r,  ,dead, c;ode$be; ef" }, ',', { { "foo;ba" }, { " r" } }, 2 },
-          { { "ab cd ef gh  i" }, ' ', { { "ab" }, { "cd" }, { "ef" }, { "gh" }, { "i" } } } };
+          { { "ab cd ef gh  i " }, ' ', { { "ab" }, { "cd" }, { "ef" }, { "gh" }, { "i" } } } };
 
 INSTANTIATE_TEST_SUITE_P(SplitTests, SplitFixture, testing::ValuesIn(split_records));
 
