@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -240,10 +241,22 @@ public:
     /// @param key
     int& operator[](const Key& key)
     {
+        typename std::vector<Key>::iterator start {};
+        typename std::vector<Key>::iterator end {};
+        std::tie(start, end) = this->keys();
+        std::set<Key> key_set(start, end);
+        if (!key_set.contains(key))
+            umap_[key] = 0;
         return umap_[key];
     }
     int& operator[](Key&& key)
     {
+        typename std::vector<Key>::iterator start {};
+        typename std::vector<Key>::iterator end {};
+        std::tie(start, end) = this->keys();
+        std::set<Key> key_set(start, end);
+        if (!key_set.contains(key))
+            umap_[key] = 0;
         return umap_[key];
     }
 
