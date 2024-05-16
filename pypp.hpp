@@ -125,6 +125,20 @@ strings split(const std::string& input_s, char split_on, int at_most = -1)
     return result;
 }
 
+///@brief Split a string into a vector of strings, return an element of said vector
+///
+/// @param  input_s string to split
+/// @param  split_on character by which to split the string
+/// @param  at_most number of (sub)strings generated
+/// @param  index of the (sub)string to be returned
+/// @return a substring of @input_s, identified by @index
+std::string splitThenGetAt(const std::string& input_s, char split_on, std::size_t index)
+{
+    const auto splits { split(input_s, split_on) };
+
+    return splits.at(index);
+}
+
 ///@brief Split a string into lines and store them as a vector
 ///
 /// @param s string to split
