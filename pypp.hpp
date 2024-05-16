@@ -95,7 +95,7 @@ template <typename UnaryPredicate> std::string strip(std::string s, UnaryPredica
 ///@brief Split a string into a vector of strings
 ///
 /// @param  input_s string to split
-/// @param  split_on charcater by which to split the string
+/// @param  split_on character by which to split the string
 /// @param  at_most number of (sub)strings generated
 /// @return a vector of substrings obtained by splitting @input_s every @split_on
 strings split(const std::string& input_s, char split_on, int at_most = -1)
