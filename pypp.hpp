@@ -383,10 +383,19 @@ private:
     std::vector<std::pair<Key, int>> items_ {};
 };
 
+template<typename T>
+concept TupleLike = requires (T t)
+{
+    std::get<0>(t);
+    std::get<1>(t);
+};
+
 struct TupleHash {
-    template <class T1, class T2> auto operator()(const std::tuple<T1, T2>& t) const noexcept -> std::size_t
+    template <TupleLike T>
+    auto operator()(const T& t) const noexcept -> std::size_t
     {
-        return std::hash<T1> {}(std::get<0>(t)) ^ std::hash<T2> {}(std::get<1>(t));
+        return std::hash<typename std::tuple_element<0, T>::type>{}(std::get<0>(t)) ^
+               std::hash<typename std::tuple_element<1, T>::type>{}(std::get<1>(t));
     }
 };
 
