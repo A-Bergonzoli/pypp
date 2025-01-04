@@ -2,12 +2,15 @@
 #define _PYPP_H
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <set>
+#include <stack>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -431,5 +434,82 @@ template <class Iterator, class... Iterators> auto zip(Iterator begin, Iterator 
 }
 
 } // namespace pypp
+
+namespace grid {
+
+using Location = std::pair<int, int>;
+
+enum class Direction {
+    UP = 0,
+    DOWN,
+    LEFT,
+    RIGHT,
+};
+
+/// @return an iterable of possible {dx, dy} when moving within a 2d grid
+std::array<Location, 4U> move()
+{
+    return { std::make_pair(-1, 0), std::make_pair(1, 0), std::make_pair(0, 1), std::make_pair(0, -1) };
+}
+
+/// @return an iterable of possible {{dx, dy}, DIR} when moving within a 2d grid
+std::array<std::pair<Location, Direction>, 4U> moveWithDIR()
+{
+    return { std::make_pair(std::make_pair(-1, 0), Direction::UP),
+        std::make_pair(std::make_pair(1, 0), Direction::DOWN),
+        std::make_pair(std::make_pair(0, 1), Direction::LEFT),
+        std::make_pair(std::make_pair(0, -1), Direction::RIGHT) };
+}
+
+bool inBounds(const strings& grid, int x, int y)
+{
+    const auto n = grid.size();
+    const auto m = grid[0].length();
+
+    return 0 <= x && x < n && 0 <= y && y < m;
+}
+
+} // namespace grid
+
+namespace algorithms {
+
+/// @brief Dept-First-Search iterative implementation using std::stack
+///
+/// @tparam condition predicate to satisfy when exploring locations
+/// @param grid a 2d grid
+/// @param start start grid location
+/// @param visited a set of already visited locations on the grid
+/// @return a vector of reached locations which satisfy @condition
+template <typename Predicate>
+std::vector<grid::Location> dfs(const strings& grid, const grid::Location& start, Predicate condition,
+    std::unordered_set<grid::Location, collections::TupleHash>& visited)
+{
+    auto x = start.first;
+    auto y = start.second;
+    std::stack<grid::Location> stack {};
+    stack.push({ x, y });
+    std::vector<grid::Location> locations {};
+
+    while (!stack.empty()) {
+        auto [cx, cy] = stack.top();
+        stack.pop();
+
+        if (visited.find({ cx, cy }) == visited.end() && condition(grid[cx][cy])) {
+            visited.insert({ cx, cy });
+            locations.push_back({ cx, cy });
+
+            for (auto [dx, dy] : grid::move()) {
+                auto nx = cx + dx;
+                auto ny = cy + dy;
+                if (grid::inBounds(grid, nx, ny) && visited.find({ nx, ny }) == visited.end())
+                    stack.push({ nx, ny });
+            }
+        }
+    }
+
+    return locations;
+}
+
+} // namespace algorithms
 
 #endif // PYPP_H
